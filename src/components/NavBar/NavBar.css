@@ -1,0 +1,22 @@
+.nav {
+  width: 300px;
+  margin-left: 10px;
+  gap: 28px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+
+  top: 0;
+  background: #fff;
+  z-index: 100;
+  border-radius: 50px;
+}
+
+.nav a {
+  margin-left: 15px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.nav a.active {
+  color: blue;
+}
