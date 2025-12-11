@@ -12,6 +12,7 @@ export default function NavBar() {
           style={{ width: "100px", height: "100px", paddingRight: "600px" }}
         ></img> */}
       </NavLink>
+      <NavLink to="/itemsList">Items List</NavLink>
       <NavLink to="/login">Login</NavLink>
       <NavLink to="/signup">Signup</NavLink>
     </nav>
