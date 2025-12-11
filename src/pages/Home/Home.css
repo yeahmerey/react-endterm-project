@@ -1,0 +1,29 @@
+.home-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* центр по вертикали */
+}
+
+.home-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ❗ Убираем margin-left — он ломает центрирование */
+.home-image {
+  width: 220px;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* ❗ Убираем margin-top — он смещает текст вниз */
+.home-text h1 {
+  font-size: 90px;
+  margin: 0;
+}
+
+.home-text p {
+  margin: 4px 0;
+}
