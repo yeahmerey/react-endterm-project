@@ -16,6 +16,32 @@ export default function Signup() {
   const handleSignup = async () => {
     setError("");
 
+    if (!email.includes("@") || !email.includes(".")) {
+      setError("Please enter a valid email.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    const hasNumber = password.split("").some((ch) => !isNaN(ch));
+
+    if (!hasNumber) {
+      setError("Password must contain at least one number.");
+      return;
+    }
+
+    const specialSymbols = "!@#$%^&*";
+    const hasSpecial = password
+      .split("")
+      .some((ch) => specialSymbols.includes(ch));
+    if (!hasSpecial) {
+      setError("Password must include a special character (!@#$%^&*)");
+      return;
+    }
+
     if (password != confirmPass) {
       setError("Password doesn't match");
       return;
