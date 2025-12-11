@@ -7,7 +7,7 @@ export default function Home() {
       <img src={myImg} alt="" className="home-image" />
 
       <div className="home-text">
-        <h1>Rick And Morty</h1>
+        <h1>Rick And Morty API</h1>
       </div>
     </div>
   );
