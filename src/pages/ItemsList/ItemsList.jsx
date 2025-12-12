@@ -1,5 +1,5 @@
 import "./ItemsList.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import Spinner from "../../components/Spinner/Spinner.jsx";
@@ -7,6 +7,8 @@ import ErrorBox from "../../components/ErrorBox/ErrorBox.jsx";
 import Card from "../../components/Card/Card.jsx";
 import { getListOrSearchLogic } from "../../services/apiService.js";
 import { useFavorites } from "../../context/useFavorites.js";
+
+import { useDebounce } from "../../hooks/useDebounce.jsx";
 
 export default function ItemsList() {
   const [params, setParams] = useSearchParams();
@@ -24,45 +26,128 @@ export default function ItemsList() {
 
   const [items, setItems] = useState([]);
 
+  const debouncedQ = useDebounce(q, 400);
+
+  const filters = useMemo(
+    () => ({
+      q: debouncedQ, // используем задебаунсенное значение!
+      status,
+      gender,
+      species,
+      page,
+    }),
+    [debouncedQ, status, gender, species, page]
+  );
+
+  // ============================================
+  // useCallback - кешируем функцию updateParam
+  // ============================================
+  // Зачем: чтобы функция не пересоздавалась при каждом рендере.
+  // Это полезно если мы передаем ее в дочерние компоненты.
+  const updateParam = useCallback(
+    (name, value) => {
+      const newParams = new URLSearchParams(params.toString());
+      if (value) {
+        newParams.set(name, value);
+      } else {
+        newParams.delete(name);
+      }
+      // Сбрасываем на первую страницу при изменении фильтров
+      if (name !== "page") {
+        newParams.set("page", "1");
+      }
+      setParams(newParams);
+    },
+    [params, setParams]
+  );
+
+  // ============================================
+  // useEffect - загружаем данные
+  // ============================================
   useEffect(() => {
     const controller = new AbortController();
-    const timeout = setTimeout(async () => {
+
+    const loadData = async () => {
       setLoading(true);
       setError("");
+
       try {
-        const data = await getListOrSearchLogic({
-          q,
-          status,
-          gender,
-          species,
-          page,
-        });
+        const data = await getListOrSearchLogic(filters);
         setItems(data.slice(0, limit));
       } catch (e) {
-        setError(`Ошибка загрузки ${e}`);
+        if (e.name !== "AbortError") {
+          setError(`Ошибка загрузки: ${e.message}`);
+        }
       } finally {
         setLoading(false);
       }
-    }, 400);
+    };
+
+    loadData();
+
     return () => {
       controller.abort();
-      clearTimeout(timeout);
     };
-  }, [q, status, gender, species, page, limit]);
+  }, [filters, limit]); // зависим от filters (который сам зависит от debouncedQ)
 
-  function updateParam(name, value) {
-    const newParams = new URLSearchParams(params.toString());
-    if (value) {
-      newParams.set(name, value);
-    } else {
-      newParams.delete(name);
-    }
-    if (name !== "page") {
-      newParams.set("page", "1");
-    }
+  // ============================================
+  // useMemo - кешируем отфильтрованные элементы
+  // ============================================
+  // Зачем: если у нас большой список, нет смысла делать slice
+  // при каждом рендере, если limit не изменился.
+  const displayItems = useMemo(() => {
+    return items.slice(0, limit);
+  }, [items, limit]);
+  // const filters = useMemo(
+  //   () => ({
+  //     q: debouncedQ,
+  //     status,
+  //     gender,
+  //     species,
+  //     page,
+  //   }),
+  //   [debouncedQ, status, gender, species, page]
+  // );
 
-    setParams(newParams);
-  }
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   const timeout = setTimeout(async () => {
+  //     setLoading(true);
+  //     setError("");
+  //     try {
+  //       const data = await getListOrSearchLogic({
+  //         q,
+  //         status,
+  //         gender,
+  //         species,
+  //         page,
+  //       });
+  //       setItems(data.slice(0, limit));
+  //     } catch (e) {
+  //       setError(`Ошибка загрузки ${e}`);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }, 400);
+  //   return () => {
+  //     controller.abort();
+  //     clearTimeout(timeout);
+  //   };
+  // }, [q, status, gender, species, page, limit]);
+
+  // function updateParam(name, value) {
+  //   const newParams = new URLSearchParams(params.toString());
+  //   if (value) {
+  //     newParams.set(name, value);
+  //   } else {
+  //     newParams.delete(name);
+  //   }
+  //   if (name !== "page") {
+  //     newParams.set("page", "1");
+  //   }
+
+  //   setParams(newParams);
+  // }
 
   //   const load = async () => {
   //     setLoading(true);
@@ -86,20 +171,20 @@ export default function ItemsList() {
 
   return (
     <>
+      {/* Сообщение о мерже локальных избранных */}
       {mergeMessage && <div className="merge-message">✅ {mergeMessage}</div>}
+
+      {/* API документация */}
       <div className="api-doc">
         <h3>Rick & Morty API Documentation</h3>
-
         <code className="api-code">
           GET https://rickandmortyapi.com/api/character
         </code>
-
         <p>
           This endpoint returns a list of characters.
           <br />
           Use query parameters to filter:
         </p>
-
         <ul>
           <li>
             <code>?name=rick</code> – search by name
@@ -118,7 +203,7 @@ export default function ItemsList() {
           className="modern-input"
           value={q}
           onChange={(e) => updateParam("q", e.target.value)}
-          placeholder="Search..."
+          placeholder="Search characters... (debounced 400ms)"
         />
 
         <select
@@ -161,11 +246,11 @@ export default function ItemsList() {
         </select>
 
         {loading && <Spinner />}
-        {error && <ErrorBox />}
+        {error && <ErrorBox message={error} />}
       </div>
 
       <ul className="list">
-        {items.map((item) => (
+        {displayItems.map((item) => (
           <Card key={item.id} item={item} />
         ))}
       </ul>
