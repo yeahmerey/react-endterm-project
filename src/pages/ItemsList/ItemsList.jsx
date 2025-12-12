@@ -10,6 +10,11 @@ import { getListOrSearchLogic } from "../../services/apiService.js";
 export default function ItemsList() {
   const [params, setParams] = useSearchParams();
   const q = params.get("q") || "";
+  const status = params.get("status");
+  const gender = params.get("gender");
+  const species = params.get("species");
+  const page = Number(params.get("page") || 1);
+  const limit = Number(params.get("limit") || 10);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -17,25 +22,64 @@ export default function ItemsList() {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    const load = async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(async () => {
       setLoading(true);
       setError("");
-
       try {
-        const data = await getListOrSearchLogic(q);
-        setItems(data);
+        const data = await getListOrSearchLogic({
+          q,
+          status,
+          gender,
+          species,
+          page,
+        });
+        setItems(data.slice(0, limit));
       } catch (e) {
         setError(`Ошибка загрузки ${e}`);
       } finally {
         setLoading(false);
       }
+    }, 400);
+    return () => {
+      controller.abort();
+      clearTimeout(timeout);
     };
-    load();
-  }, [q]);
+  }, [q, status, gender, species, page, limit]);
 
-  function handleSearch(e) {
-    setParams({ q: e.target.value });
+  function updateParam(name, value) {
+    const newParams = new URLSearchParams(params.toString());
+    if (value) {
+      newParams.set(name, value);
+    } else {
+      newParams.delete(name);
+    }
+    if (name !== "page") {
+      newParams.set("page", "1");
+    }
+
+    setParams(newParams);
   }
+
+  //   const load = async () => {
+  //     setLoading(true);
+  //     setError("");
+
+  //     try {
+  //       const data = await getListOrSearchLogic(q);
+  //       setItems(data);
+  //     } catch (e) {
+  //       setError(`Ошибка загрузки ${e}`);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   load();
+  // }, [q]);
+
+  // function handleSearch(e) {
+  //   setParams({ q: e.target.value });
+  // }
 
   return (
     <>
@@ -69,9 +113,49 @@ export default function ItemsList() {
         <input
           className="modern-input"
           value={q}
-          onChange={handleSearch}
+          onChange={(e) => updateParam("q", e.target.value)}
           placeholder="Search..."
         />
+
+        <select
+          value={status}
+          onChange={(e) => updateParam("status", e.target.value)}
+        >
+          <option value="">All statuses</option>
+          <option value="alive">Alive</option>
+          <option value="dead">Dead</option>
+          <option value="unknown">Unknown</option>
+        </select>
+
+        <select
+          value={gender}
+          onChange={(e) => updateParam("gender", e.target.value)}
+        >
+          <option value="">All genders</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="genderless">Genderless</option>
+          <option value="unknown">Unknown</option>
+        </select>
+
+        <select
+          value={species}
+          onChange={(e) => updateParam("species", e.target.value)}
+        >
+          <option value="">All species</option>
+          <option value="human">Human</option>
+          <option value="alien">Alien</option>
+        </select>
+
+        <select
+          value={limit}
+          onChange={(e) => updateParam("limit", e.target.value)}
+        >
+          <option value="5">5 per page</option>
+          <option value="10">10 per page</option>
+          <option value="20">20 per page</option>
+        </select>
+
         {loading && <Spinner />}
         {error && <ErrorBox />}
       </div>
@@ -81,6 +165,19 @@ export default function ItemsList() {
           <Card key={item.id} item={item} />
         ))}
       </ul>
+
+      <div className="pagination">
+        <button
+          disabled={page === 1}
+          onClick={() => updateParam("page", page - 1)}
+        >
+          Prev
+        </button>
+
+        <span>Page {page}</span>
+
+        <button onClick={() => updateParam("page", page + 1)}>Next</button>
+      </div>
     </>
   );
 }
