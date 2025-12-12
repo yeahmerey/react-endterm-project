@@ -1,5 +1,5 @@
 import "./Login.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../context/useAuth.js";
 import { useNavigate, Link } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -12,7 +12,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
 
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     setError("");
@@ -38,19 +38,26 @@ export default function Login() {
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (user) {
+      navigate("/profile");
+    }
+  }, [user, navigate]);
   return (
     <>
-      <h2>{user ? "You are already logged in" : "Login"}</h2>
+      <h2> Login </h2>
       <div>
         <input
           type={"email"}
           placeholder={"Enter your email"}
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
         <input
           type={"password"}
           placeholder={"Enter your password"}
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
@@ -59,8 +66,14 @@ export default function Login() {
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
       <div>
-        <button onClick={handleLogin}> Login </button>
-        <button onClick={handleGoogleLogin}> Sign in with Google </button>
+        <button onClick={handleLogin} disabled={loading}>
+          {" "}
+          Login{" "}
+        </button>
+        <button onClick={handleGoogleLogin} disabled={loading}>
+          {" "}
+          Sign in with Google{" "}
+        </button>
 
         <p>
           Don't have an account? ...{" "}
