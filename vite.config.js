@@ -7,5 +7,11 @@ export default defineConfig({
   server: {
     port: 33731,
     host: true,
+    hrm: {
+      protocol: "ws",
+      host: "localhost",
+      port: 33731,
+      clientPort: 33731,
+    },
   },
 });

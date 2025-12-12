@@ -5,10 +5,11 @@ import { signOut } from "firebase/auth";
 import { useAuth } from "../../context/useAuth.js";
 import { auth } from "../../services/authService.js";
 import { useState } from "react";
-
+import { useFavorites } from "../../context/useFavorites.js";
 export default function NavBar() {
   const [err, setErr] = useState("");
   const user = useAuth();
+  const { favorites } = useFavorites();
 
   const handleSignOut = async () => {
     try {
@@ -31,6 +32,12 @@ export default function NavBar() {
         ></img> */}
       </NavLink>
       <NavLink to="/itemsList">Items List</NavLink>
+      <NavLink to="/favorites" className="favorites-link">
+        Favorites
+        {favorites.length > 0 && (
+          <span className="favorites-badge">{favorites.length}</span>
+        )}
+      </NavLink>
       {user ? (
         <>
           <NavLink to="profile">Profile</NavLink>

@@ -6,11 +6,14 @@ import Spinner from "../../components/Spinner/Spinner.jsx";
 import ErrorBox from "../../components/ErrorBox/ErrorBox.jsx";
 import Card from "../../components/Card/Card.jsx";
 import { getListOrSearchLogic } from "../../services/apiService.js";
+import { useFavorites } from "../../context/useFavorites.js";
 
 export default function ItemsList() {
   const [params, setParams] = useSearchParams();
+  const { mergeMessage } = useFavorites();
+
   const q = params.get("q") || "";
-  const status = params.get("status");
+  const status = params.get("status") || "";
   const gender = params.get("gender");
   const species = params.get("species");
   const page = Number(params.get("page") || 1);
@@ -83,6 +86,7 @@ export default function ItemsList() {
 
   return (
     <>
+      {mergeMessage && <div className="merge-message">✅ {mergeMessage}</div>}
       <div className="api-doc">
         <h3>Rick & Morty API Documentation</h3>
 

@@ -33,3 +33,16 @@ export async function getCharacterById(id) {
   }
   return await res.json();
 }
+
+export async function getCharactersByIds(ids) {
+  if (!ids || ids.length === 0) return [];
+  const idsString = ids.join(",");
+  const res = await fetch(`${API}/${idsString}`);
+
+  if (!res.ok) {
+    throw new Error("Failed to load items by IDs");
+  }
+
+  const data = await res.json();
+  return Array.isArray(data) ? data : [data];
+}
