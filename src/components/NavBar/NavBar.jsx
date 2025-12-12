@@ -8,7 +8,7 @@ import { useState } from "react";
 
 export default function NavBar() {
   const [err, setErr] = useState("");
-  const { user } = useAuth();
+  const user = useAuth();
 
   const handleSignOut = async () => {
     try {

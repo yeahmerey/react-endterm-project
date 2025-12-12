@@ -3,7 +3,10 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../services/authService.js";
+import { useAuth } from "../../context/useAuth.js";
+import { useEffect } from "react";
 export default function Signup() {
+  const user = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
@@ -49,12 +52,18 @@ export default function Signup() {
     setLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      navigate("/profile");
     } catch (e) {
       setError(e.message);
+      setLoading(false);
     }
-    setLoading(false);
   };
+
+  useEffect(() => {
+    if (user) {
+      navigate("/profile");
+    }
+  }, [user, navigate]);
+
   return (
     <>
       <p>Signup page</p>

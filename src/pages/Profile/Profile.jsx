@@ -3,7 +3,7 @@ import { useAuth } from "../../context/useAuth.js";
 import Spinner from "../../components/Spinner/Spinner.jsx";
 import LogoutButton from "../../components/LogoutButton/LogoutButton.jsx";
 export default function Profile() {
-  const { user } = useAuth();
+  const user = useAuth();
 
   if (!user) return <p>{<Spinner />}</p>;
 

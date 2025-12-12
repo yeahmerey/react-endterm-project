@@ -1,29 +1,31 @@
 import "./Login.css";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "../../context/useAuth.js";
-import { useNavigate, Link } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, signInWithGooglePopup } from "../../services/authService.js";
 
 export default function Login() {
   const user = useAuth();
-  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  if (user) {
+    return <Navigate to="/profile" />;
+  }
   const handleLogin = async () => {
     setError("");
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/profile");
     } catch (e) {
       setError(e.message);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleGoogleLogin = async () => {
@@ -31,18 +33,12 @@ export default function Login() {
     setLoading(true);
     try {
       await signInWithGooglePopup();
-      navigate("/profile");
     } catch (e) {
       setError(e.message);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  useEffect(() => {
-    if (user) {
-      navigate("/profile");
-    }
-  }, [user, navigate]);
   return (
     <>
       <h2> Login </h2>
